@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valentine?</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, #2a0f2f, #0f1020);
+      color: #fff;
+      overflow: hidden;
+      padding: 24px;
+    }
+
+    /* floating hearts */
+    .hearts {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .heart {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: rgba(255, 90, 150, 0.7);
+      transform: rotate(45deg);
+      animation: float 8s linear infinite;
+      border-radius: 3px;
+      filter: drop-shadow(0 10px 18px rgba(255, 90, 150, 0.18));
+    }
+    .heart::before,
+    .heart::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: inherit;
+      border-radius: 50%;
+    }
+    .heart::before { left: -7px; }
+    .heart::after { top: -7px; }
+
+    @keyframes float {
+      from { transform: translateY(110vh) rotate(45deg); opacity: 0; }
+      20% { opacity: 0.85; }
+      to { transform: translateY(-130vh) rotate(45deg); opacity: 0; }
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: min(680px, 95vw);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 800;
+      line-height: 1.12;
+    }
+
+    .name {
+      color: #ff5aa5; /* pink */
+      text-shadow: 0 10px 22px rgba(255, 90, 165, 0.25);
+    }
+
+    /* typing cursor */
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      margin-left: 2px;
+      color: rgba(255,255,255,0.85);
+      animation: blink 0.85s step-end infinite;
+      transform: translateY(-1px);
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-size: 16px;
+      cursor: pointer;
+      color: #fff;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.16);
+      transition: transform 0.12s ease, filter 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    button:active { transform: translateY(1px); }
+
+    .yes {
+      background: linear-gradient(135deg, #37d67a, #0ca357);
+      border: 0;
+    }
+
+    .no {
+      background: linear-gradient(135deg, #ff5a5f, #d22436);
+      border: 0;
+    }
+
+    .small {
+      margin-top: 14px;
+      opacity: 0.75;
+      font-size: 13px;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .heart { animation: none; opacity: 0.25; }
+      .cursor { animation: none; }
+      button { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hearts" id="hearts"></div>
+  <canvas id="confetti"></canvas>
+
+  <main class="card" id="app"></main>
+
+  <script>
+    const app = document.getElementById("app");
+
+    // Name typing config
+    const NAME = "alice";           // lower case as you wrote it
+    const TYPE_SPEED_MS = 120;      // typing speed
+
+    function render(step) {
+      if (step === 1) {
+        app.innerHTML = `
+          <h1>
+            <span class="name" id="typedName"></span><span class="cursor" id="cursor">|</span>,
+            <br/>will you be my valentine?
+          </h1>
+          <div class="actions">
+            <button class="yes" id="yes1">Yes</button>
+            <button class="no" id="no1">No</button>
+          </div>
+        `;
+
+        typeNameInto(document.getElementById("typedName"), document.getElementById("cursor"), NAME);
+
+        document.getElementById("yes1").onclick = success;
+        document.getElementById("no1").onclick = () => render(2);
+        return;
+      }
+
+      if (step === 2) {
+        app.innerHTML = `
+          <h1>really?</h1>
+          <div class="actions">
+            <button id="r1">Really</button>
+          </div>
+        `;
+        document.getElementById("r1").onclick = () => render(3);
+        return;
+      }
+
+      if (step === 3) {
+        app.innerHTML = `
+          <h1>are you sure?</h1>
+          <div class="actions">
+            <button id="r2">Are you sure?</button>
+          </div>
+        `;
+        document.getElementById("r2").onclick = () => render(4);
+        return;
+      }
+
+      if (step === 4) {
+        app.innerHTML = `
+          <h1>🙂</h1>
+          <div class="actions">
+            <button class="yes" id="yesFinal">Yes</button>
+          </div>
+        `;
+        document.getElementById("yesFinal").onclick = success;
+        return;
+      }
+    }
+
+    function typeNameInto(targetEl, cursorEl, text) {
+      // If reduced motion is enabled, just show full text instantly
+      const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (prefersReduced) {
+        targetEl.textContent = text;
+        if (cursorEl) cursorEl.style.display = "none";
+        return;
+      }
+
+      targetEl.textContent = "";
+      let i = 0;
+      const timer = setInterval(() => {
+        targetEl.textContent += text[i];
+        i++;
+        if (i >= text.length) {
+          clearInterval(timer);
+          // Hide cursor after finishing
+          setTimeout(() => { if (cursorEl) cursorEl.style.display = "none"; }, 450);
+        }
+      }, TYPE_SPEED_MS);
+    }
+
+    function success() {
+      launchConfetti();
+      app.innerHTML = `
+        <h1>YESSS 💖</h1>
+        <div class="small">okay, it’s official. you’re my valentine.</div>
+      `;
+    }
+
+    render(1);
+
+    /* HEART BACKGROUND */
+    const hearts = document.getElementById("hearts");
+    function spawnHeart() {
+      const h = document.createElement("div");
+      h.className = "heart";
+      h.style.left = Math.random() * 100 + "vw";
+
+      const dur = 6 + Math.random() * 6;
+      h.style.animationDuration = dur + "s";
+
+      const size = 10 + Math.random() * 16;
+      h.style.width = size + "px";
+      h.style.height = size + "px";
+
+      h.style.opacity = (0.35 + Math.random() * 0.55).toFixed(2);
+      hearts.appendChild(h);
+      setTimeout(() => h.remove(), (dur * 1000) + 1000);
+    }
+    for (let i = 0; i < 18; i++) spawnHeart();
+    setInterval(spawnHeart, 420);
+
+    /* CONFETTI */
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+
+    function resize() {
+      canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
+      canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    let pieces = [];
+    let animating = false;
+
+    function launchConfetti() {
+      pieces = [];
+      const count = 220;
+
+      const originX = canvas.width * 0.5;
+      const originY = canvas.height * 0.35;
+
+      for (let i = 0; i < count; i++) {
+        pieces.push({
+          x: originX,
+          y: originY,
+          vx: (Math.random() - 0.5) * 16 * devicePixelRatio,
+          vy: (-8 - Math.random() * 10) * devicePixelRatio,
+          size: (3 + Math.random() * 6) * devicePixelRatio,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.35,
+          life: 0,
+          maxLife: 140 + Math.random() * 80
+        });
+      }
+
+      animating = true;
+      requestAnimationFrame(tick);
+    }
+
+    function tick() {
+      if (!animating) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (const p of pieces) {
+        p.life++;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.18 * devicePixelRatio;
+        p.rot += p.vr;
+
+        const alpha = Math.max(0, 1 - p.life / p.maxLife);
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = `hsla(${Math.floor(Math.random() * 360)}, 90%, 60%, 1)`;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5);
+        ctx.restore();
+      }
+
+      pieces = pieces.filter(p => p.life < p.maxLife && p.y < canvas.height + 200);
+
+      if (pieces.length) requestAnimationFrame(tick);
+      else animating = false;
+    }
+  </script>
+</body>
+</html>
